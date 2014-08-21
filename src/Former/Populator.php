@@ -147,6 +147,19 @@ class Populator extends Collection
 	 */
 	public function getAttributeFromModel($model, $attribute, $fallback)
 	{
+		if ($attribute == '_token') {
+			return $fallback;
+		}
+		if ($model instanceof \Mongator\Group\AbstractGroup) {
+			foreach ($model as $key => $value) {
+				if ($key == $attribute) {
+					return $value;
+				}
+			}
+		}
+		if ($model instanceof \Mongator\Document\AbstractDocument) {
+			return $model->get($attribute);
+		}
 		if ($model instanceof Model) {
 			return $model->getAttribute($attribute);
 		}
