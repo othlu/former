@@ -147,9 +147,12 @@ class Populator extends Collection
 	 */
 	public function getAttributeFromModel($model, $attribute, $fallback)
 	{
+		// ignore Larave'l submit token
 		if ($attribute == '_token') {
 			return $fallback;
 		}
+
+		// in case of mongator groups
 		if ($model instanceof \Mongator\Group\AbstractGroup) {
 			foreach ($model as $key => $value) {
 				if ($key == $attribute) {
@@ -157,18 +160,37 @@ class Populator extends Collection
 				}
 			}
 		}
+
+		// in case of mongator document
 		if ($model instanceof \Mongator\Document\AbstractDocument) {
-			return $model->get($attribute);
+			if (method_exists($model, 'get')) {
+				return $model->get($attribute);
+			}
 		}
+
+		// in case of Eloquent Model - not used in everyglobe
 		if ($model instanceof Model) {
 			return $model->getAttribute($attribute);
 		}
 
+		// in case model can be converted to an array
 		if (method_exists($model, 'toArray')) {
 			$model = $model->toArray();
-		} else {
-			$model = (array) $model;
+			if (array_key_exists($attribute, $model)) {
+				return $model[$attribute];
+			}
 		}
+
+		// in case of objects that have custom set methods (like Money)
+		if ($model instanceof \JsonSerializable) {
+			$functionName = 'get'.ucfirst($attribute);
+			if (method_exists($model, $functionName)) {
+				return $model->$functionName();
+			}
+		}
+
+		// one last try
+		$model = (array) $model;
 		if (array_key_exists($attribute, $model)) {
 			return $model[$attribute];
 		}
