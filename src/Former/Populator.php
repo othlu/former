@@ -181,6 +181,11 @@ class Populator extends Collection
 			}
 		}
 
+		// in case of date objects
+		if ($model instanceof \eg\Common\Tools\IsoDate) {
+			return $model->format('Y-m-d H:i:s');
+		}
+
 		// in case of objects that have custom set methods (like Money)
 		if ($model instanceof \JsonSerializable) {
 			$functionName = 'get'.ucfirst($attribute);
